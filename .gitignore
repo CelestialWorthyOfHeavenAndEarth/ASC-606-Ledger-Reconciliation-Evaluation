@@ -1,0 +1,21 @@
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+Thumbs.db
+.DS_Store
+
+# Local historical snapshots are retained outside the published source tree.
+archive/
+
+# Keep the latest full run and dry-run transcripts; omit the superseded partial run.
+transcripts/post_fix_free_eval_2026-11-09/
