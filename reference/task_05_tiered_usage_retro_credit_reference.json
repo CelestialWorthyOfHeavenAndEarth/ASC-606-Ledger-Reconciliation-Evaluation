@@ -1,0 +1,21 @@
+{
+  "account_id": "acct_5005",
+  "audit_period_end": "2026-02-16T00:00:00Z",
+  "ledger_balances_usd": {
+    "net_cash_collected": 2615.0,
+    "customer_wallet_balance": 550.0,
+    "recognized_revenue": 1095.0,
+    "deferred_revenue": 970.0,
+    "tax_liability": 0.0,
+    "fx_realized_gain_loss": 0.0
+  },
+  "reconciling_items": [
+    {
+      "event_id": "evt_05_sla_credit",
+      "category": "LATE_USAGE_REBILL",
+      "amount_impact_usd": -550.0
+    }
+  ],
+  "ignored_event_ids": [],
+  "final_subscription_status": "ACTIVE"
+}

@@ -1,0 +1,61 @@
+{
+  "timestamp": "2026-11-08T18:49:22Z",
+  "model_id": "dry-run/simulated-balance-offset-a",
+  "provider": "dry-run",
+  "task_id": "task_04_fx_chargeback_reversal",
+  "trial": 2,
+  "temperature": 0.2,
+  "max_tokens": 2400,
+  "reasoning_disabled": false,
+  "prompt": "# FX settlement and chargeback reversal (Hard)\n## Scenario\nA European subsidiary invoices €4,000 plus €800 VAT at 1.0850 USD/EUR. The €4,800 payment settles at 1.0920. The account receives a proportional €1,000 refund at 1.0780, then a €3,800 chargeback at 1.1000, which is won ten days later at 1.0950. A $15 fee is not recoverable.\n## Governing Accounting & ASC 606 Ledger Specification\n1. Event Ordering: process events in ascending effective_at (ISO-8601 UTC); break exact timestamp ties by sequence_no ascending. received_at is only for choosing the earliest duplicate and deciding whether a notice deadline was met relative to effective_at.\n2. Idempotency Deduplication: among events sharing idempotency_key, apply only the event with earliest received_at (tie-break by sequence_no). Put every later retry's event_id in ignored_event_ids and add one DUPLICATE_IGNORED reconciling item whose amount_impact_usd is that duplicate's gross USD amount.\n3. Intermediate Rounding: round every discrete monetary calculation, including proration daily rates, discount, tax, and FX conversion, to USD 0.01 using Banker's Rounding (ROUND_HALF_EVEN) before using it in a later calculation.\n4. ASC 606 Revenue Recognition (Daily Proration): for a billing cycle with N days and D elapsed days at audit_period_end, recognized_revenue = ROUND_HALF_EVEN(net pretax consideration * D / N, 0.01), and deferred_revenue = net pretax consideration - recognized_revenue. Use exact UTC day counts unless a task explicitly defines local calendar-day billing boundaries, in which case use those stated boundaries.\n5. Cutoff: only effective events at or before audit_period_end affect balances. Future-effective events remain visible in the input but have no effect on the as-of output.\n6. Output only one JSON object matching the exact schema below. Use numeric USD amounts, two decimal places, all required keys, and no additional top-level keys.\n## Task-Specific Policies\n1. Translate invoice principal and VAT separately at invoice FX. Recognize invoice principal in revenue and VAT as tax liability.\n2. The payment settlement creates FX gain/loss equal to USD cash received minus the invoice's USD carrying value. The refund reverses base and VAT pro rata at invoice FX; compare the reversed carrying value with USD cash refunded at refund_fx to calculate refund FX gain/loss.\n3. A chargeback temporarily removes the disputed USD principal from cash. On a won dispute, restore the principal at reversal_fx. The realized FX loss on the dispute lifecycle is disputed principal times (dispute_fx - reversal_fx). Keep the $15 fee deducted from cash and report it as CHARGEBACK_FEE_UNRECOVERED.\n4. Reverse the partial refund's proportional VAT at invoice FX. All service has been delivered by the audit cutoff, so deferred revenue is zero. A won dispute leaves status ACTIVE.\n## Input data (complete event stream)\n```json\n{\n  \"account_id\": \"acct_4004\",\n  \"audit_period_end\": \"2026-07-20T00:00:00Z\",\n  \"events\": [\n    {\n      \"event_id\": \"evt_04_01_invoice\",\n      \"idempotency_key\": \"key_evt_04_01_invoice\",\n      \"effective_at\": \"2026-07-01T00:00:00Z\",\n      \"received_at\": \"2026-07-01T00:00:02Z\",\n      \"sequence_no\": 1,\n      \"event_type\": \"invoice_issued\",\n      \"base_eur\": \"4000.00\",\n      \"vat_eur\": \"800.00\",\n      \"invoice_fx\": \"1.0850\"\n    },\n    {\n      \"event_id\": \"evt_04_02_payment\",\n      \"idempotency_key\": \"key_evt_04_02_payment\",\n      \"effective_at\": \"2026-07-04T00:00:00Z\",\n      \"received_at\": \"2026-07-04T00:00:01Z\",\n      \"sequence_no\": 2,\n      \"event_type\": \"payment_settled\",\n      \"amount_eur\": \"4800.00\",\n      \"settlement_fx\": \"1.0920\"\n    },\n    {\n      \"event_id\": \"evt_04_03_fx_notice\",\n      \"idempotency_key\": \"key_evt_04_03_fx_notice\",\n      \"effective_at\": \"2026-07-04T00:00:02Z\",\n      \"received_at\": \"2026-07-04T00:00:03Z\",\n      \"sequence_no\": 3,\n      \"event_type\": \"fx_settlement_notice\",\n      \"amount_usd\": \"33.60\"\n    },\n    {\n      \"event_id\": \"evt_04_04_refund\",\n      \"idempotency_key\": \"key_evt_04_04_refund\",\n      \"effective_at\": \"2026-07-05T00:00:00Z\",\n      \"received_at\": \"2026-07-05T00:00:01Z\",\n      \"sequence_no\": 4,\n      \"event_type\": \"partial_refund\",\n      \"total_eur\": \"1000.00\",\n      \"base_eur\": \"833.33\",\n      \"vat_eur\": \"166.67\",\n      \"refund_fx\": \"1.0780\"\n    },\n    {\n      \"event_id\": \"evt_04_05_refund_tax\",\n      \"idempotency_key\": \"key_evt_04_05_refund_tax\",\n      \"effective_at\": \"2026-07-05T00:00:01Z\",\n      \"received_at\": \"2026-07-05T00:00:02Z\",\n      \"sequence_no\": 5,\n      \"event_type\": \"vat_reversal\",\n      \"amount_eur\": \"166.67\"\n    },\n    {\n      \"event_id\": \"evt_04_06_dispute\",\n      \"idempotency_key\": \"key_evt_04_06_dispute\",\n      \"effective_at\": \"2026-07-08T00:00:00Z\",\n      \"received_at\": \"2026-07-08T00:00:01Z\",\n      \"sequence_no\": 6,\n      \"event_type\": \"chargeback_opened\",\n      \"principal_eur\": \"3800.00\",\n      \"dispute_fx\": \"1.1000\"\n    },\n    {\n      \"event_id\": \"evt_04_07_fee\",\n      \"idempotency_key\": \"key_evt_04_07_fee\",\n      \"effective_at\": \"2026-07-08T00:00:01Z\",\n      \"received_at\": \"2026-07-08T00:00:02Z\",\n      \"sequence_no\": 7,\n      \"event_type\": \"chargeback_fee\",\n      \"amount_usd\": \"15.00\"\n    },\n    {\n      \"event_id\": \"evt_04_08_reversal\",\n      \"idempotency_key\": \"key_evt_04_08_reversal\",\n      \"effective_at\": \"2026-07-18T00:00:00Z\",\n      \"received_at\": \"2026-07-18T00:00:01Z\",\n      \"sequence_no\": 8,\n      \"event_type\": \"chargeback_won\",\n      \"principal_eur\": \"3800.00\",\n      \"reversal_fx\": \"1.0950\"\n    },\n    {\n      \"event_id\": \"evt_04_09_notice\",\n      \"idempotency_key\": \"key_evt_04_09_notice\",\n      \"effective_at\": \"2026-07-18T00:00:01Z\",\n      \"received_at\": \"2026-07-18T00:00:02Z\",\n      \"sequence_no\": 9,\n      \"event_type\": \"dispute_status\",\n      \"status\": \"WON\"\n    },\n    {\n      \"event_id\": \"evt_04_10_fx\",\n      \"idempotency_key\": \"key_evt_04_10_fx\",\n      \"effective_at\": \"2026-07-19T00:00:00Z\",\n      \"received_at\": \"2026-07-19T00:00:01Z\",\n      \"sequence_no\": 10,\n      \"event_type\": \"fx_close_marker\"\n    },\n    {\n      \"event_id\": \"evt_04_11_vat\",\n      \"idempotency_key\": \"key_evt_04_11_vat\",\n      \"effective_at\": \"2026-07-19T00:00:01Z\",\n      \"received_at\": \"2026-07-19T00:00:02Z\",\n      \"sequence_no\": 11,\n      \"event_type\": \"vat_close_marker\"\n    },\n    {\n      \"event_id\": \"evt_04_12_audit\",\n      \"idempotency_key\": \"key_evt_04_12_audit\",\n      \"effective_at\": \"2026-07-20T00:00:00Z\",\n      \"received_at\": \"2026-07-20T00:00:01Z\",\n      \"sequence_no\": 12,\n      \"event_type\": \"audit_marker\"\n    }\n  ]\n}\n```\n## Required output JSON schema\nReturn exactly this JSON shape; preserve every key, use an array even when empty, and use two-decimal USD values:\n```json\n{\n  \"account_id\": \"string\",\n  \"audit_period_end\": \"YYYY-MM-DDTHH:MM:SSZ\",\n  \"ledger_balances_usd\": {\n    \"net_cash_collected\": 0.0,\n    \"customer_wallet_balance\": 0.0,\n    \"recognized_revenue\": 0.0,\n    \"deferred_revenue\": 0.0,\n    \"tax_liability\": 0.0,\n    \"fx_realized_gain_loss\": 0.0\n  },\n  \"reconciling_items\": [\n    {\n      \"event_id\": \"string\",\n      \"category\": \"DUPLICATE_IGNORED | RETROACTIVE_PRORATION | COUPON_FLOOR_CAPPED | COOLING_OFF_REFUND | FX_SETTLEMENT_DIFF | CHARGEBACK_FEE_UNRECOVERED | LATE_USAGE_REBILL | POLICY_VIOLATION_HOLD\",\n      \"amount_impact_usd\": 0.0\n    }\n  ],\n  \"ignored_event_ids\": [\n    \"evt_...\"\n  ],\n  \"final_subscription_status\": \"ACTIVE | CANCELED | PAST_DUE | SUSPENDED_DISPUTE\"\n}\n```",
+  "raw_model_response": "{\n  \"account_id\": \"acct_4004\",\n  \"audit_period_end\": \"2026-07-20T00:00:00Z\",\n  \"ledger_balances_usd\": {\n    \"net_cash_collected\": 4130.71,\n    \"customer_wallet_balance\": 0.0,\n    \"recognized_revenue\": 3434.73,\n    \"deferred_revenue\": 1.11,\n    \"tax_liability\": 687.16,\n    \"fx_realized_gain_loss\": 21.6\n  },\n  \"reconciling_items\": [\n    {\n      \"event_id\": \"evt_04_02_payment\",\n      \"category\": \"FX_SETTLEMENT_DIFF\",\n      \"amount_impact_usd\": 33.6\n    },\n    {\n      \"event_id\": \"evt_04_04_refund\",\n      \"category\": \"FX_SETTLEMENT_DIFF\",\n      \"amount_impact_usd\": 7.0\n    },\n    {\n      \"event_id\": \"evt_04_07_fee\",\n      \"category\": \"CHARGEBACK_FEE_UNRECOVERED\",\n      \"amount_impact_usd\": -15.0\n    },\n    {\n      \"event_id\": \"evt_04_08_reversal\",\n      \"category\": \"FX_SETTLEMENT_DIFF\",\n      \"amount_impact_usd\": -19.0\n    }\n  ],\n  \"ignored_event_ids\": [],\n  \"final_subscription_status\": \"ACTIVE\"\n}",
+  "token_usage": {
+    "input_tokens": 1854,
+    "output_tokens": 226,
+    "total_tokens": 2081
+  },
+  "estimated_usd_cost": 0.0,
+  "cost_estimate_basis": "simulated; no API request",
+  "latency_ms": 0.154,
+  "grader": {
+    "passed": false,
+    "total_score": 0.75,
+    "dimension_scores": {
+      "ledger_balances": 0.25,
+      "reconciling_items": 0.25,
+      "ignored_event_ids": 0.15,
+      "final_status": 0.1
+    },
+    "failure_tags": [
+      "LEDGER_BALANCE_MISMATCH"
+    ],
+    "format_compliant": true,
+    "errors": [],
+    "discrepancies": {
+      "balance_matches": {
+        "net_cash_collected": false,
+        "customer_wallet_balance": true,
+        "recognized_revenue": false,
+        "deferred_revenue": false,
+        "tax_liability": true,
+        "fx_realized_gain_loss": true
+      },
+      "balance_deltas_usd": {
+        "net_cash_collected": 1.11,
+        "customer_wallet_balance": 0.0,
+        "recognized_revenue": -1.11,
+        "deferred_revenue": 1.11,
+        "tax_liability": 0.0,
+        "fx_realized_gain_loss": 0.0
+      },
+      "extra_reconciling_items": [],
+      "missing_reconciling_items": [],
+      "ignored_event_ids_missing": [],
+      "ignored_event_ids_extra": [],
+      "status_matches": true
+    }
+  },
+  "automated_failure_tags": [
+    "LEDGER_BALANCE_MISMATCH"
+  ]
+}

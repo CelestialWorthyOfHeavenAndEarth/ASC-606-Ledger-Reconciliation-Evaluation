@@ -1,0 +1,61 @@
+{
+  "timestamp": "2026-11-08T18:49:22Z",
+  "model_id": "dry-run/simulated-balance-offset-a",
+  "provider": "dry-run",
+  "task_id": "task_06_leap_year_dst_cutover",
+  "trial": 2,
+  "temperature": 0.2,
+  "max_tokens": 2400,
+  "reasoning_disabled": false,
+  "prompt": "# Leap year and DST billing cutover (Hard)\n## Scenario\nA New York subscription renews on its local monthly anchor from January 31, 2024 across leap-year February and the March 10 DST shift. Usage at 2024-03-01T04:30Z is still February 29 local time; usage at 2024-04-01T03:30Z is still March 31 local time.\n## Governing Accounting & ASC 606 Ledger Specification\n1. Event Ordering: process events in ascending effective_at (ISO-8601 UTC); break exact timestamp ties by sequence_no ascending. received_at is only for choosing the earliest duplicate and deciding whether a notice deadline was met relative to effective_at.\n2. Idempotency Deduplication: among events sharing idempotency_key, apply only the event with earliest received_at (tie-break by sequence_no). Put every later retry's event_id in ignored_event_ids and add one DUPLICATE_IGNORED reconciling item whose amount_impact_usd is that duplicate's gross USD amount.\n3. Intermediate Rounding: round every discrete monetary calculation, including proration daily rates, discount, tax, and FX conversion, to USD 0.01 using Banker's Rounding (ROUND_HALF_EVEN) before using it in a later calculation.\n4. ASC 606 Revenue Recognition (Daily Proration): for a billing cycle with N days and D elapsed days at audit_period_end, recognized_revenue = ROUND_HALF_EVEN(net pretax consideration * D / N, 0.01), and deferred_revenue = net pretax consideration - recognized_revenue. Use exact UTC day counts unless a task explicitly defines local calendar-day billing boundaries, in which case use those stated boundaries.\n5. Cutoff: only effective events at or before audit_period_end affect balances. Future-effective events remain visible in the input but have no effect on the as-of output.\n6. Output only one JSON object matching the exact schema below. Use numeric USD amounts, two decimal places, all required keys, and no additional top-level keys.\n## Task-Specific Policies\n1. Use America/New_York local monthly anchor boundaries: Jan 31 to Feb 29 is 29 calendar days, and Feb 29 to Mar 31 is 31 calendar days. The second interval crosses the spring DST change; do not use a fixed 05:00Z cutoff after DST.\n2. For usage-batch attribution, use the batch's New York local calendar date: local February 29 belongs to the February usage bucket and local March 31 belongs to March, even when the UTC timestamp falls on the next UTC date. This date-based usage attribution is separate from base-fee daily proration across the stated anchor boundaries.\n3. The $290 February and March base invoices have been collected. The 10-unit batch at 2024-03-01T04:30Z belongs to the February cycle (10 * $1 = $10) and is billed and collected before cutoff.\n4. The 20-unit batch at 2024-04-01T03:30Z belongs to March 31 local time but occurs after audit_period_end; exclude its $20 from the as-of balances.\n5. At audit_period_end, the February cycle is complete and 16 of 31 local calendar days have elapsed in the March cycle. Recognize the full February consideration and 16/31 of the March base fee; defer the rest. Status is ACTIVE.\n## Input data (complete event stream)\n```json\n{\n  \"account_id\": \"acct_6006\",\n  \"audit_period_end\": \"2024-03-16T04:00:00Z\",\n  \"events\": [\n    {\n      \"event_id\": \"evt_06_anchor\",\n      \"idempotency_key\": \"key_evt_06_anchor\",\n      \"effective_at\": \"2024-01-31T05:00:00Z\",\n      \"received_at\": \"2024-01-31T05:00:01Z\",\n      \"sequence_no\": 1,\n      \"event_type\": \"subscription_started\",\n      \"anchor_local\": \"2024-01-31T00:00:00-05:00\",\n      \"timezone\": \"America/New_York\",\n      \"monthly_price_usd\": \"290.00\"\n    },\n    {\n      \"event_id\": \"evt_06_feb_invoice\",\n      \"idempotency_key\": \"key_evt_06_feb_invoice\",\n      \"effective_at\": \"2024-01-31T05:00:00Z\",\n      \"received_at\": \"2024-01-31T05:00:02Z\",\n      \"sequence_no\": 2,\n      \"event_type\": \"monthly_invoice\",\n      \"cycle\": \"2024-01-31/2024-02-29\",\n      \"amount_usd\": \"290.00\"\n    },\n    {\n      \"event_id\": \"evt_06_feb_payment\",\n      \"idempotency_key\": \"key_evt_06_feb_payment\",\n      \"effective_at\": \"2024-01-31T06:00:00Z\",\n      \"received_at\": \"2024-01-31T06:00:01Z\",\n      \"sequence_no\": 3,\n      \"event_type\": \"payment_settled\",\n      \"amount_usd\": \"290.00\"\n    },\n    {\n      \"event_id\": \"evt_06_feb_boundary_usage\",\n      \"idempotency_key\": \"key_evt_06_feb_boundary_usage\",\n      \"effective_at\": \"2024-03-01T04:30:00Z\",\n      \"received_at\": \"2024-03-02T09:00:00Z\",\n      \"sequence_no\": 4,\n      \"event_type\": \"usage_batch\",\n      \"units\": 10,\n      \"rate_usd\": \"1.00\",\n      \"timezone\": \"America/New_York\"\n    },\n    {\n      \"event_id\": \"evt_06_feb_usage_invoice\",\n      \"idempotency_key\": \"key_evt_06_feb_usage_invoice\",\n      \"effective_at\": \"2024-03-02T09:00:00Z\",\n      \"received_at\": \"2024-03-02T09:00:01Z\",\n      \"sequence_no\": 5,\n      \"event_type\": \"usage_invoice\",\n      \"amount_usd\": \"10.00\",\n      \"cycle\": \"2024-01-31/2024-02-29\"\n    },\n    {\n      \"event_id\": \"evt_06_feb_usage_payment\",\n      \"idempotency_key\": \"key_evt_06_feb_usage_payment\",\n      \"effective_at\": \"2024-03-03T00:00:00Z\",\n      \"received_at\": \"2024-03-03T00:00:01Z\",\n      \"sequence_no\": 6,\n      \"event_type\": \"payment_settled\",\n      \"amount_usd\": \"10.00\"\n    },\n    {\n      \"event_id\": \"evt_06_mar_renewal\",\n      \"idempotency_key\": \"key_evt_06_mar_renewal\",\n      \"effective_at\": \"2024-02-29T05:00:00Z\",\n      \"received_at\": \"2024-02-29T05:00:01Z\",\n      \"sequence_no\": 7,\n      \"event_type\": \"subscription_renewed\",\n      \"next_cycle\": \"2024-02-29/2024-03-31\",\n      \"local_anchor\": \"2024-02-29T00:00:00-05:00\"\n    },\n    {\n      \"event_id\": \"evt_06_mar_invoice\",\n      \"idempotency_key\": \"key_evt_06_mar_invoice\",\n      \"effective_at\": \"2024-02-29T05:00:00Z\",\n      \"received_at\": \"2024-02-29T05:00:02Z\",\n      \"sequence_no\": 8,\n      \"event_type\": \"monthly_invoice\",\n      \"cycle\": \"2024-02-29/2024-03-31\",\n      \"amount_usd\": \"290.00\"\n    },\n    {\n      \"event_id\": \"evt_06_mar_payment\",\n      \"idempotency_key\": \"key_evt_06_mar_payment\",\n      \"effective_at\": \"2024-02-29T06:00:00Z\",\n      \"received_at\": \"2024-02-29T06:00:01Z\",\n      \"sequence_no\": 9,\n      \"event_type\": \"payment_settled\",\n      \"amount_usd\": \"290.00\"\n    },\n    {\n      \"event_id\": \"evt_06_dst\",\n      \"idempotency_key\": \"key_evt_06_dst\",\n      \"effective_at\": \"2024-03-10T07:00:00Z\",\n      \"received_at\": \"2024-03-10T07:00:01Z\",\n      \"sequence_no\": 10,\n      \"event_type\": \"timezone_offset_change\",\n      \"from_offset\": \"-05:00\",\n      \"to_offset\": \"-04:00\",\n      \"zone\": \"America/New_York\"\n    },\n    {\n      \"event_id\": \"evt_06_mar_boundary_usage\",\n      \"idempotency_key\": \"key_evt_06_mar_boundary_usage\",\n      \"effective_at\": \"2024-04-01T03:30:00Z\",\n      \"received_at\": \"2024-04-02T08:00:00Z\",\n      \"sequence_no\": 11,\n      \"event_type\": \"usage_batch\",\n      \"units\": 20,\n      \"rate_usd\": \"1.00\",\n      \"timezone\": \"America/New_York\"\n    },\n    {\n      \"event_id\": \"evt_06_future_usage_invoice\",\n      \"idempotency_key\": \"key_evt_06_future_usage_invoice\",\n      \"effective_at\": \"2024-04-02T08:00:00Z\",\n      \"received_at\": \"2024-04-02T08:00:01Z\",\n      \"sequence_no\": 12,\n      \"event_type\": \"usage_invoice\",\n      \"amount_usd\": \"20.00\",\n      \"cycle\": \"2024-02-29/2024-03-31\"\n    },\n    {\n      \"event_id\": \"evt_06_audit\",\n      \"idempotency_key\": \"key_evt_06_audit\",\n      \"effective_at\": \"2024-03-16T04:00:00Z\",\n      \"received_at\": \"2024-04-02T08:00:02Z\",\n      \"sequence_no\": 13,\n      \"event_type\": \"audit_cutoff_marker\"\n    },\n    {\n      \"event_id\": \"evt_06_status\",\n      \"idempotency_key\": \"key_evt_06_status\",\n      \"effective_at\": \"2024-03-16T04:00:00Z\",\n      \"received_at\": \"2024-04-02T08:00:03Z\",\n      \"sequence_no\": 14,\n      \"event_type\": \"subscription_status\",\n      \"status\": \"ACTIVE\"\n    }\n  ]\n}\n```\n## Required output JSON schema\nReturn exactly this JSON shape; preserve every key, use an array even when empty, and use two-decimal USD values:\n```json\n{\n  \"account_id\": \"string\",\n  \"audit_period_end\": \"YYYY-MM-DDTHH:MM:SSZ\",\n  \"ledger_balances_usd\": {\n    \"net_cash_collected\": 0.0,\n    \"customer_wallet_balance\": 0.0,\n    \"recognized_revenue\": 0.0,\n    \"deferred_revenue\": 0.0,\n    \"tax_liability\": 0.0,\n    \"fx_realized_gain_loss\": 0.0\n  },\n  \"reconciling_items\": [\n    {\n      \"event_id\": \"string\",\n      \"category\": \"DUPLICATE_IGNORED | RETROACTIVE_PRORATION | COUPON_FLOOR_CAPPED | COOLING_OFF_REFUND | FX_SETTLEMENT_DIFF | CHARGEBACK_FEE_UNRECOVERED | LATE_USAGE_REBILL | POLICY_VIOLATION_HOLD\",\n      \"amount_impact_usd\": 0.0\n    }\n  ],\n  \"ignored_event_ids\": [\n    \"evt_...\"\n  ],\n  \"final_subscription_status\": \"ACTIVE | CANCELED | PAST_DUE | SUSPENDED_DISPUTE\"\n}\n```",
+  "raw_model_response": "{\n  \"account_id\": \"acct_6006\",\n  \"audit_period_end\": \"2024-03-16T04:00:00Z\",\n  \"ledger_balances_usd\": {\n    \"net_cash_collected\": 591.11,\n    \"customer_wallet_balance\": 0.0,\n    \"recognized_revenue\": 448.57,\n    \"deferred_revenue\": 141.43,\n    \"tax_liability\": 0.0,\n    \"fx_realized_gain_loss\": 0.0\n  },\n  \"reconciling_items\": [],\n  \"ignored_event_ids\": [],\n  \"final_subscription_status\": \"ACTIVE\"\n}",
+  "token_usage": {
+    "input_tokens": 2151,
+    "output_tokens": 99,
+    "total_tokens": 2251
+  },
+  "estimated_usd_cost": 0.0,
+  "cost_estimate_basis": "simulated; no API request",
+  "latency_ms": 0.091,
+  "grader": {
+    "passed": false,
+    "total_score": 0.75,
+    "dimension_scores": {
+      "ledger_balances": 0.25,
+      "reconciling_items": 0.25,
+      "ignored_event_ids": 0.15,
+      "final_status": 0.1
+    },
+    "failure_tags": [
+      "LEDGER_BALANCE_MISMATCH"
+    ],
+    "format_compliant": true,
+    "errors": [],
+    "discrepancies": {
+      "balance_matches": {
+        "net_cash_collected": false,
+        "customer_wallet_balance": true,
+        "recognized_revenue": false,
+        "deferred_revenue": false,
+        "tax_liability": true,
+        "fx_realized_gain_loss": true
+      },
+      "balance_deltas_usd": {
+        "net_cash_collected": 1.11,
+        "customer_wallet_balance": 0.0,
+        "recognized_revenue": -1.11,
+        "deferred_revenue": 1.11,
+        "tax_liability": 0.0,
+        "fx_realized_gain_loss": 0.0
+      },
+      "extra_reconciling_items": [],
+      "missing_reconciling_items": [],
+      "ignored_event_ids_missing": [],
+      "ignored_event_ids_extra": [],
+      "status_matches": true
+    }
+  },
+  "automated_failure_tags": [
+    "LEDGER_BALANCE_MISMATCH"
+  ]
+}

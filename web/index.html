@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101b2a" />
+    <title>ASC 606 Reconciliation Lab</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="ASC 606 Reconciliation Lab home">
+        <span class="brand-mark" aria-hidden="true">RL</span>
+        <span>RECONCILIATION LAB</span>
+      </a>
+      <div class="topbar-meta">
+        <span class="live-dot" aria-hidden="true"></span>
+        <span>Saved evaluation · no API calls</span>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="hero">
+        <div class="eyebrow">ASC 606 · ASYNCHRONOUS LEDGER BENCHMARK</div>
+        <div class="hero-layout">
+          <div>
+            <h1>Explore the reconciliation results.</h1>
+            <p class="hero-copy">
+              Compare five free model routes across eight synthetic accounting cases. Choose a task to inspect
+              each model’s score, observed mismatches, and saved response.
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#task-explorer">Explore task results <span aria-hidden="true">↓</span></a>
+              <a class="button button-secondary" href="../results/DETAILED_EVALUATION.md">Open detailed report <span aria-hidden="true">↗</span></a>
+            </div>
+          </div>
+          <aside class="hero-note" aria-label="Evaluation configuration">
+            <div class="note-label">RUN CONFIGURATION</div>
+            <dl>
+              <div><dt>Provider</dt><dd>OpenRouter</dd></div>
+              <div><dt>Model routes</dt><dd>5 · free only</dd></div>
+              <div><dt>Coverage</dt><dd>40 / 40 responses</dd></div>
+              <div><dt>Trials per task</dt><dd>1</dd></div>
+              <div><dt>Reported cost</dt><dd>$0.00</dd></div>
+            </dl>
+          </aside>
+        </div>
+      </section>
+
+      <div id="load-status" class="load-status" role="status" aria-live="polite">Loading saved evaluation…</div>
+
+      <section id="overview" class="overview-grid" aria-label="Evaluation overview"></section>
+
+      <section class="panel leaderboard-panel" aria-labelledby="leaderboard-title">
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow">MODEL COMPARISON</div>
+            <h2 id="leaderboard-title">Partial score by model</h2>
+          </div>
+          <p class="section-aside">One trial per task. Partial scores are descriptive, not stable model estimates.</p>
+        </div>
+        <div class="table-scroll">
+          <table class="leaderboard">
+            <thead>
+              <tr>
+                <th scope="col">Model</th>
+                <th scope="col">Responses</th>
+                <th scope="col">Mean partial</th>
+                <th scope="col">Strict passes</th>
+                <th scope="col">Avg latency</th>
+                <th scope="col">Reported cost</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="task-explorer" class="explorer-grid" aria-labelledby="explorer-title">
+        <div class="panel task-panel">
+          <div class="section-heading compact-heading">
+            <div>
+              <div class="eyebrow">TASK EXPLORER</div>
+              <h2 id="explorer-title">Inspect a case</h2>
+            </div>
+          </div>
+          <div class="control-row">
+            <label for="task-select">Benchmark task</label>
+            <select id="task-select"></select>
+          </div>
+          <div id="task-description" class="task-description"></div>
+          <h3 class="subheading">Responses for this task</h3>
+          <div class="table-scroll">
+            <table class="task-table">
+              <thead>
+                <tr><th scope="col">Model</th><th scope="col">Score</th><th scope="col">Strict</th><th scope="col">Observed tags</th></tr>
+              </thead>
+              <tbody id="task-results-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <aside class="panel response-panel" aria-labelledby="response-title">
+          <div class="section-heading compact-heading">
+            <div>
+              <div class="eyebrow">TRANSCRIPT</div>
+              <h2 id="response-title">Model response</h2>
+            </div>
+          </div>
+          <div class="control-row">
+            <label for="model-select">Model</label>
+            <select id="model-select"></select>
+          </div>
+          <div id="response-detail" class="response-detail">
+            <p class="muted">Choose a task and model to inspect the saved response.</p>
+          </div>
+        </aside>
+      </section>
+
+      <footer class="page-footer">
+        <span>All cases use synthetic ledger data and the benchmark’s stated policies.</span>
+        <nav aria-label="Project reports">
+          <a href="../README.md">README</a>
+          <a href="../results/RESULTS_REPORT.md">Results matrix</a>
+          <a href="../SUBMISSION_TEXT.md">Video script</a>
+        </nav>
+      </footer>
+    </main>
+  </body>
+</html>

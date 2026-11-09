@@ -1,0 +1,6 @@
+model_id,trials_per_task,responses_scored,expected_responses,coverage_pct,strict_pass_rate_pct,mean_partial_score_pct,pass_at_k_pct,pass_all_k_pct,mean_latency_seconds,total_run_cost_usd
+nvidia/nemotron-3.5-lightning:free,1,8,8,100.0,0.0,46.51,0.0,0.0,3.947,0.0
+nvidia/nemotron-3.5-super-vl:free,1,8,8,100.0,0.0,64.99,0.0,0.0,2.328,0.0
+dots-studio/dots-3-note-preview:free,1,8,8,100.0,0.0,85.1,0.0,0.0,11.263,0.0
+xingchen-agi/xing4.0-29b-a4b:free,1,8,8,100.0,0.0,55.64,0.0,0.0,9.58,0.0
+cohere/north-mini-code:free,1,8,8,100.0,0.0,44.62,0.0,0.0,1.837,0.0

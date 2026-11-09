@@ -1,0 +1,234 @@
+{
+  "generated_at": "2026-11-08T18:49:23Z",
+  "dry_run_oracle": true,
+  "task_ids": [
+    "task_01_idempotency_ooo",
+    "task_02_retro_proration_cooling",
+    "task_03_coupon_floor_tax_cap",
+    "task_04_fx_chargeback_reversal",
+    "task_05_tiered_usage_retro_credit",
+    "task_06_leap_year_dst_cutover",
+    "task_07_negative_control_clean_audit",
+    "task_08_asc606_multi_rule_cascade"
+  ],
+  "trials_per_task": 3,
+  "models": [
+    {
+      "model_id": "dry-run/oracle-reference",
+      "trials_per_task": 3,
+      "trial_count": 24,
+      "expected_trial_count": 24,
+      "coverage_rate": 1.0,
+      "strict_pass_rate": 1.0,
+      "mean_partial_score": 1.0,
+      "pass_at_k": 1.0,
+      "pass_all_k": 1.0,
+      "mean_latency_seconds": 0.00039954166666666686,
+      "total_run_cost_usd": 0.0
+    },
+    {
+      "model_id": "dry-run/simulated-balance-offset-a",
+      "trials_per_task": 3,
+      "trial_count": 24,
+      "expected_trial_count": 24,
+      "coverage_rate": 1.0,
+      "strict_pass_rate": 0.0,
+      "mean_partial_score": 0.75,
+      "pass_at_k": 0.0,
+      "pass_all_k": 0.0,
+      "mean_latency_seconds": 0.00015591666666666667,
+      "total_run_cost_usd": 0.0
+    },
+    {
+      "model_id": "dry-run/simulated-balance-offset-b",
+      "trials_per_task": 3,
+      "trial_count": 24,
+      "expected_trial_count": 24,
+      "coverage_rate": 1.0,
+      "strict_pass_rate": 0.0,
+      "mean_partial_score": 0.8333329999999998,
+      "pass_at_k": 0.0,
+      "pass_all_k": 0.0,
+      "mean_latency_seconds": 0.00016504166666666666,
+      "total_run_cost_usd": 0.0
+    }
+  ],
+  "task_matrix": [
+    {
+      "task_id": "task_01_idempotency_ooo",
+      "dry-run/oracle-reference": {
+        "passed_trials": 3,
+        "trials": 3,
+        "primary_failure_tags": []
+      },
+      "dry-run/simulated-balance-offset-a": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dry-run/simulated-balance-offset-b": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      }
+    },
+    {
+      "task_id": "task_02_retro_proration_cooling",
+      "dry-run/oracle-reference": {
+        "passed_trials": 3,
+        "trials": 3,
+        "primary_failure_tags": []
+      },
+      "dry-run/simulated-balance-offset-a": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dry-run/simulated-balance-offset-b": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      }
+    },
+    {
+      "task_id": "task_03_coupon_floor_tax_cap",
+      "dry-run/oracle-reference": {
+        "passed_trials": 3,
+        "trials": 3,
+        "primary_failure_tags": []
+      },
+      "dry-run/simulated-balance-offset-a": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dry-run/simulated-balance-offset-b": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      }
+    },
+    {
+      "task_id": "task_04_fx_chargeback_reversal",
+      "dry-run/oracle-reference": {
+        "passed_trials": 3,
+        "trials": 3,
+        "primary_failure_tags": []
+      },
+      "dry-run/simulated-balance-offset-a": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dry-run/simulated-balance-offset-b": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      }
+    },
+    {
+      "task_id": "task_05_tiered_usage_retro_credit",
+      "dry-run/oracle-reference": {
+        "passed_trials": 3,
+        "trials": 3,
+        "primary_failure_tags": []
+      },
+      "dry-run/simulated-balance-offset-a": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dry-run/simulated-balance-offset-b": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      }
+    },
+    {
+      "task_id": "task_06_leap_year_dst_cutover",
+      "dry-run/oracle-reference": {
+        "passed_trials": 3,
+        "trials": 3,
+        "primary_failure_tags": []
+      },
+      "dry-run/simulated-balance-offset-a": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dry-run/simulated-balance-offset-b": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      }
+    },
+    {
+      "task_id": "task_07_negative_control_clean_audit",
+      "dry-run/oracle-reference": {
+        "passed_trials": 3,
+        "trials": 3,
+        "primary_failure_tags": []
+      },
+      "dry-run/simulated-balance-offset-a": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dry-run/simulated-balance-offset-b": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      }
+    },
+    {
+      "task_id": "task_08_asc606_multi_rule_cascade",
+      "dry-run/oracle-reference": {
+        "passed_trials": 3,
+        "trials": 3,
+        "primary_failure_tags": []
+      },
+      "dry-run/simulated-balance-offset-a": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dry-run/simulated-balance-offset-b": {
+        "passed_trials": 0,
+        "trials": 3,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      }
+    }
+  ]
+}

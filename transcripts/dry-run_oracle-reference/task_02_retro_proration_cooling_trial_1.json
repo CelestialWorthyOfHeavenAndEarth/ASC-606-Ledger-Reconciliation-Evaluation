@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-11-08T18:49:22Z",
+  "model_id": "dry-run/oracle-reference",
+  "provider": "dry-run",
+  "task_id": "task_02_retro_proration_cooling",
+  "trial": 1,
+  "temperature": 0.2,
+  "max_tokens": 2400,
+  "reasoning_disabled": false,
+  "prompt": "# Retroactive proration and cooling-off boundary (Medium)\n## Scenario\nA Pro subscription begins March 1, 2026 at $600/month. A $300/month seat upgrade takes effect on Day 6. A downgrade webhook received on Day 16 is backdated to Day 11, and the customer cancels on Day 20.\n## Governing Accounting & ASC 606 Ledger Specification\n1. Event Ordering: process events in ascending effective_at (ISO-8601 UTC); break exact timestamp ties by sequence_no ascending. received_at is only for choosing the earliest duplicate and deciding whether a notice deadline was met relative to effective_at.\n2. Idempotency Deduplication: among events sharing idempotency_key, apply only the event with earliest received_at (tie-break by sequence_no). Put every later retry's event_id in ignored_event_ids and add one DUPLICATE_IGNORED reconciling item whose amount_impact_usd is that duplicate's gross USD amount.\n3. Intermediate Rounding: round every discrete monetary calculation, including proration daily rates, discount, tax, and FX conversion, to USD 0.01 using Banker's Rounding (ROUND_HALF_EVEN) before using it in a later calculation.\n4. ASC 606 Revenue Recognition (Daily Proration): for a billing cycle with N days and D elapsed days at audit_period_end, recognized_revenue = ROUND_HALF_EVEN(net pretax consideration * D / N, 0.01), and deferred_revenue = net pretax consideration - recognized_revenue. Use exact UTC day counts unless a task explicitly defines local calendar-day billing boundaries, in which case use those stated boundaries.\n5. Cutoff: only effective events at or before audit_period_end affect balances. Future-effective events remain visible in the input but have no effect on the as-of output.\n6. Output only one JSON object matching the exact schema below. Use numeric USD amounts, two decimal places, all required keys, and no additional top-level keys.\n## Task-Specific Policies\n1. The upgrade adds $300/month for the 25 remaining days of the 30-day cycle, billed as a rounded prorated charge.\n2. The backdated downgrade changes the effective monthly rate from $900 to $450 for 20 remaining days. Its credit is ($900 - $450) * 20/30, rounded to cents, and is posted to the customer wallet, never returned as cash.\n3. A cancellation within 14 exact days of initial subscription creation refunds unused prepaid balance to cash. A cancellation later than 14 days does not refund cash; transfer unused deferred consideration to the wallet and set deferred revenue to zero.\n4. Revenue is earned by the effective daily plan schedule: $600/day-rate for Days 1-6, $900/day-rate for Days 6-11, and $450/day-rate for Days 11-20. At cancellation, recognize earned consideration and transfer the remaining net deferred amount to wallet.\n## Input data (complete event stream)\n```json\n{\n  \"account_id\": \"acct_2002\",\n  \"audit_period_end\": \"2026-03-21T00:00:00Z\",\n  \"events\": [\n    {\n      \"event_id\": \"evt_02_01_signup\",\n      \"idempotency_key\": \"key_evt_02_01_signup\",\n      \"effective_at\": \"2026-03-01T00:00:00Z\",\n      \"received_at\": \"2026-03-01T00:00:02Z\",\n      \"sequence_no\": 1,\n      \"event_type\": \"subscription_started\",\n      \"initial_monthly_rate_usd\": \"600.00\"\n    },\n    {\n      \"event_id\": \"evt_02_02_invoice\",\n      \"idempotency_key\": \"key_evt_02_02_invoice\",\n      \"effective_at\": \"2026-03-01T00:00:00Z\",\n      \"received_at\": \"2026-03-01T00:00:03Z\",\n      \"sequence_no\": 2,\n      \"event_type\": \"invoice_issued\",\n      \"amount_usd\": \"600.00\"\n    },\n    {\n      \"event_id\": \"evt_02_03_payment\",\n      \"idempotency_key\": \"key_evt_02_03_payment\",\n      \"effective_at\": \"2026-03-01T01:00:00Z\",\n      \"received_at\": \"2026-03-01T01:00:01Z\",\n      \"sequence_no\": 3,\n      \"event_type\": \"payment_settled\",\n      \"amount_usd\": \"600.00\"\n    },\n    {\n      \"event_id\": \"evt_02_04_upgrade\",\n      \"idempotency_key\": \"key_evt_02_04_upgrade\",\n      \"effective_at\": \"2026-03-07T00:00:00Z\",\n      \"received_at\": \"2026-03-07T00:00:03Z\",\n      \"sequence_no\": 4,\n      \"event_type\": \"seat_addon.purchased\",\n      \"monthly_delta_usd\": \"300.00\",\n      \"remaining_days\": 25,\n      \"cycle_days\": 30\n    },\n    {\n      \"event_id\": \"evt_02_05_upgrade_payment\",\n      \"idempotency_key\": \"key_evt_02_05_upgrade_payment\",\n      \"effective_at\": \"2026-03-07T00:05:00Z\",\n      \"received_at\": \"2026-03-07T00:05:01Z\",\n      \"sequence_no\": 5,\n      \"event_type\": \"payment_settled\",\n      \"amount_usd\": \"250.00\"\n    },\n    {\n      \"event_id\": \"evt_02_06_downgrade\",\n      \"idempotency_key\": \"key_evt_02_06_downgrade\",\n      \"effective_at\": \"2026-03-12T00:00:00Z\",\n      \"received_at\": \"2026-03-17T10:00:00Z\",\n      \"sequence_no\": 6,\n      \"event_type\": \"plan_downgrade\",\n      \"prior_monthly_rate_usd\": \"900.00\",\n      \"new_monthly_rate_usd\": \"450.00\",\n      \"remaining_days\": 20,\n      \"cycle_days\": 30\n    },\n    {\n      \"event_id\": \"evt_02_07_cancel\",\n      \"idempotency_key\": \"key_evt_02_07_cancel\",\n      \"effective_at\": \"2026-03-21T00:00:00Z\",\n      \"received_at\": \"2026-03-21T00:00:03Z\",\n      \"sequence_no\": 7,\n      \"event_type\": \"subscription_canceled\",\n      \"initial_subscription_at\": \"2026-03-01T00:00:00Z\",\n      \"cycle_days\": 30,\n      \"elapsed_days\": 20\n    },\n    {\n      \"event_id\": \"evt_02_08_wallet\",\n      \"idempotency_key\": \"key_evt_02_08_wallet\",\n      \"effective_at\": \"2026-03-21T00:00:01Z\",\n      \"received_at\": \"2026-03-21T00:00:04Z\",\n      \"sequence_no\": 8,\n      \"event_type\": \"wallet_policy_marker\",\n      \"amount_usd\": \"0.00\"\n    },\n    {\n      \"event_id\": \"evt_02_09_notice\",\n      \"idempotency_key\": \"key_evt_02_09_notice\",\n      \"effective_at\": \"2026-03-12T00:00:00Z\",\n      \"received_at\": \"2026-03-17T10:00:01Z\",\n      \"sequence_no\": 9,\n      \"event_type\": \"plan_notice_received\",\n      \"notice_deadline_met\": false\n    },\n    {\n      \"event_id\": \"evt_02_10_tax\",\n      \"idempotency_key\": \"key_evt_02_10_tax\",\n      \"effective_at\": \"2026-03-21T00:00:00Z\",\n      \"received_at\": \"2026-03-21T00:00:05Z\",\n      \"sequence_no\": 10,\n      \"event_type\": \"tax_recalculated\",\n      \"amount_usd\": \"0.00\"\n    },\n    {\n      \"event_id\": \"evt_02_11_usage\",\n      \"idempotency_key\": \"key_evt_02_11_usage\",\n      \"effective_at\": \"2026-03-18T00:00:00Z\",\n      \"received_at\": \"2026-03-18T00:00:01Z\",\n      \"sequence_no\": 11,\n      \"event_type\": \"usage_recorded\",\n      \"units\": 40,\n      \"amount_usd\": \"0.00\"\n    },\n    {\n      \"event_id\": \"evt_02_12_audit\",\n      \"idempotency_key\": \"key_evt_02_12_audit\",\n      \"effective_at\": \"2026-03-21T00:00:00Z\",\n      \"received_at\": \"2026-03-21T00:00:06Z\",\n      \"sequence_no\": 12,\n      \"event_type\": \"audit_marker\",\n      \"label\": \"cancellation_cutoff\"\n    }\n  ]\n}\n```\n## Required output JSON schema\nReturn exactly this JSON shape; preserve every key, use an array even when empty, and use two-decimal USD values:\n```json\n{\n  \"account_id\": \"string\",\n  \"audit_period_end\": \"YYYY-MM-DDTHH:MM:SSZ\",\n  \"ledger_balances_usd\": {\n    \"net_cash_collected\": 0.0,\n    \"customer_wallet_balance\": 0.0,\n    \"recognized_revenue\": 0.0,\n    \"deferred_revenue\": 0.0,\n    \"tax_liability\": 0.0,\n    \"fx_realized_gain_loss\": 0.0\n  },\n  \"reconciling_items\": [\n    {\n      \"event_id\": \"string\",\n      \"category\": \"DUPLICATE_IGNORED | RETROACTIVE_PRORATION | COUPON_FLOOR_CAPPED | COOLING_OFF_REFUND | FX_SETTLEMENT_DIFF | CHARGEBACK_FEE_UNRECOVERED | LATE_USAGE_REBILL | POLICY_VIOLATION_HOLD\",\n      \"amount_impact_usd\": 0.0\n    }\n  ],\n  \"ignored_event_ids\": [\n    \"evt_...\"\n  ],\n  \"final_subscription_status\": \"ACTIVE | CANCELED | PAST_DUE | SUSPENDED_DISPUTE\"\n}\n```",
+  "raw_model_response": "{\n  \"account_id\": \"acct_2002\",\n  \"audit_period_end\": \"2026-03-21T00:00:00Z\",\n  \"ledger_balances_usd\": {\n    \"net_cash_collected\": 850.0,\n    \"customer_wallet_balance\": 445.0,\n    \"recognized_revenue\": 405.0,\n    \"deferred_revenue\": 0.0,\n    \"tax_liability\": 0.0,\n    \"fx_realized_gain_loss\": 0.0\n  },\n  \"reconciling_items\": [\n    {\n      \"event_id\": \"evt_02_06_downgrade\",\n      \"category\": \"RETROACTIVE_PRORATION\",\n      \"amount_impact_usd\": -300.0\n    }\n  ],\n  \"ignored_event_ids\": [],\n  \"final_subscription_status\": \"CANCELED\"\n}",
+  "token_usage": {
+    "input_tokens": 1870,
+    "output_tokens": 132,
+    "total_tokens": 2003
+  },
+  "estimated_usd_cost": 0.0,
+  "cost_estimate_basis": "simulated; no API request",
+  "latency_ms": 0.194,
+  "grader": {
+    "passed": true,
+    "total_score": 1.0,
+    "dimension_scores": {
+      "ledger_balances": 0.5,
+      "reconciling_items": 0.25,
+      "ignored_event_ids": 0.15,
+      "final_status": 0.1
+    },
+    "failure_tags": [],
+    "format_compliant": true,
+    "errors": [],
+    "discrepancies": {
+      "balance_matches": {
+        "net_cash_collected": true,
+        "customer_wallet_balance": true,
+        "recognized_revenue": true,
+        "deferred_revenue": true,
+        "tax_liability": true,
+        "fx_realized_gain_loss": true
+      },
+      "balance_deltas_usd": {
+        "net_cash_collected": 0.0,
+        "customer_wallet_balance": 0.0,
+        "recognized_revenue": 0.0,
+        "deferred_revenue": 0.0,
+        "tax_liability": 0.0,
+        "fx_realized_gain_loss": 0.0
+      },
+      "extra_reconciling_items": [],
+      "missing_reconciling_items": [],
+      "ignored_event_ids_missing": [],
+      "ignored_event_ids_extra": [],
+      "status_matches": true
+    }
+  },
+  "automated_failure_tags": []
+}

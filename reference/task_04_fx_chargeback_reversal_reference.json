@@ -1,0 +1,36 @@
+{
+  "account_id": "acct_4004",
+  "audit_period_end": "2026-07-20T00:00:00Z",
+  "ledger_balances_usd": {
+    "net_cash_collected": 4129.6,
+    "customer_wallet_balance": 0.0,
+    "recognized_revenue": 3435.84,
+    "deferred_revenue": 0.0,
+    "tax_liability": 687.16,
+    "fx_realized_gain_loss": 21.6
+  },
+  "reconciling_items": [
+    {
+      "event_id": "evt_04_02_payment",
+      "category": "FX_SETTLEMENT_DIFF",
+      "amount_impact_usd": 33.6
+    },
+    {
+      "event_id": "evt_04_04_refund",
+      "category": "FX_SETTLEMENT_DIFF",
+      "amount_impact_usd": 7.0
+    },
+    {
+      "event_id": "evt_04_07_fee",
+      "category": "CHARGEBACK_FEE_UNRECOVERED",
+      "amount_impact_usd": -15.0
+    },
+    {
+      "event_id": "evt_04_08_reversal",
+      "category": "FX_SETTLEMENT_DIFF",
+      "amount_impact_usd": -19.0
+    }
+  ],
+  "ignored_event_ids": [],
+  "final_subscription_status": "ACTIVE"
+}

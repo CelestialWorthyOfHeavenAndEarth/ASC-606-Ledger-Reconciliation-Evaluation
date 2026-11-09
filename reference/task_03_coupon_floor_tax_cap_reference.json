@@ -1,0 +1,21 @@
+{
+  "account_id": "acct_3003",
+  "audit_period_end": "2026-06-16T00:00:00Z",
+  "ledger_balances_usd": {
+    "net_cash_collected": 2430.75,
+    "customer_wallet_balance": 0.0,
+    "recognized_revenue": 1300.0,
+    "deferred_revenue": 1300.0,
+    "tax_liability": 230.75,
+    "fx_realized_gain_loss": 0.0
+  },
+  "reconciling_items": [
+    {
+      "event_id": "evt_03_04_coupon",
+      "category": "COUPON_FLOOR_CAPPED",
+      "amount_impact_usd": 150.0
+    }
+  ],
+  "ignored_event_ids": [],
+  "final_subscription_status": "ACTIVE"
+}

@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-11-08T20:14:10Z",
+  "model_id": "nvidia/nemotron-3.5-super-vl:free",
+  "provider": "openrouter",
+  "task_id": "task_03_coupon_floor_tax_cap",
+  "trial": 1,
+  "temperature": 0.2,
+  "max_tokens": 2400,
+  "reasoning_disabled": true,
+  "prompt": "# Coupon floor, tax, and wallet precedence (Hard)\n## Scenario\nAn enterprise invoice has $2,500 base charge and $850 overage, a 30% promotional coupon capped at $900, a $2,600 minimum pre-tax commitment floor, a $400 opening wallet, and 8.875% sales tax.\n## Governing Accounting & ASC 606 Ledger Specification\n1. Event Ordering: process events in ascending effective_at (ISO-8601 UTC); break exact timestamp ties by sequence_no ascending. received_at is only for choosing the earliest duplicate and deciding whether a notice deadline was met relative to effective_at.\n2. Idempotency Deduplication: among events sharing idempotency_key, apply only the event with earliest received_at (tie-break by sequence_no). Put every later retry's event_id in ignored_event_ids and add one DUPLICATE_IGNORED reconciling item whose amount_impact_usd is that duplicate's gross USD amount.\n3. Intermediate Rounding: round every discrete monetary calculation, including proration daily rates, discount, tax, and FX conversion, to USD 0.01 using Banker's Rounding (ROUND_HALF_EVEN) before using it in a later calculation.\n4. ASC 606 Revenue Recognition (Daily Proration): for a billing cycle with N days and D elapsed days at audit_period_end, recognized_revenue = ROUND_HALF_EVEN(net pretax consideration * D / N, 0.01), and deferred_revenue = net pretax consideration - recognized_revenue. Use exact UTC day counts unless a task explicitly defines local calendar-day billing boundaries, in which case use those stated boundaries.\n5. Cutoff: only effective events at or before audit_period_end affect balances. Future-effective events remain visible in the input but have no effect on the as-of output.\n6. Output only one JSON object matching the exact schema below. Use numeric USD amounts, two decimal places, all required keys, and no additional top-level keys.\n## Task-Specific Policies\n1. Combine the $2,500 base and $850 usage lines before discount. Compute 30% off, first applying the $900 maximum discount, then cap the allowed discount so post-discount pretax subtotal is not below $2,600. Log the prevented discount as COUPON_FLOOR_CAPPED with positive amount_impact_usd.\n2. Compute sales tax at 8.875% on the post-coupon pretax subtotal and round to cents.\n3. Apply the $400 opening wallet only after tax. It reduces cash collected, but does not reduce tax liability or recognized revenue.\n4. The service cycle is 30 days, starts June 1, and has 15 elapsed days at audit_period_end. Recognize/defer the post-coupon pretax consideration using the universal daily proration rule. The account remains ACTIVE.\n## Input data (complete event stream)\n```json\n{\n  \"account_id\": \"acct_3003\",\n  \"audit_period_end\": \"2026-06-16T00:00:00Z\",\n  \"events\": [\n    {\n      \"event_id\": \"evt_03_01_contract\",\n      \"idempotency_key\": \"key_evt_03_01_contract\",\n      \"effective_at\": \"2026-06-01T00:00:00Z\",\n      \"received_at\": \"2026-06-01T00:00:01Z\",\n      \"sequence_no\": 1,\n      \"event_type\": \"contract_started\",\n      \"minimum_pretax_commitment_usd\": \"2600.00\"\n    },\n    {\n      \"event_id\": \"evt_03_02_base_invoice\",\n      \"idempotency_key\": \"key_evt_03_02_base_invoice\",\n      \"effective_at\": \"2026-06-01T00:00:00Z\",\n      \"received_at\": \"2026-06-01T00:00:02Z\",\n      \"sequence_no\": 2,\n      \"event_type\": \"invoice_line\",\n      \"amount_usd\": \"2500.00\",\n      \"line_type\": \"base\"\n    },\n    {\n      \"event_id\": \"evt_03_03_usage_invoice\",\n      \"idempotency_key\": \"key_evt_03_03_usage_invoice\",\n      \"effective_at\": \"2026-06-01T00:00:00Z\",\n      \"received_at\": \"2026-06-01T00:00:03Z\",\n      \"sequence_no\": 3,\n      \"event_type\": \"invoice_line\",\n      \"amount_usd\": \"850.00\",\n      \"line_type\": \"overage\"\n    },\n    {\n      \"event_id\": \"evt_03_04_coupon\",\n      \"idempotency_key\": \"key_evt_03_04_coupon\",\n      \"effective_at\": \"2026-06-02T00:00:00Z\",\n      \"received_at\": \"2026-06-02T00:00:01Z\",\n      \"sequence_no\": 4,\n      \"event_type\": \"coupon_applied\",\n      \"percent\": \"30\",\n      \"max_discount_usd\": \"900.00\"\n    },\n    {\n      \"event_id\": \"evt_03_05_tax\",\n      \"idempotency_key\": \"key_evt_03_05_tax\",\n      \"effective_at\": \"2026-06-02T00:00:01Z\",\n      \"received_at\": \"2026-06-02T00:00:02Z\",\n      \"sequence_no\": 5,\n      \"event_type\": \"tax_calculated\",\n      \"rate_percent\": \"8.875\"\n    },\n    {\n      \"event_id\": \"evt_03_06_wallet_open\",\n      \"idempotency_key\": \"key_evt_03_06_wallet_open\",\n      \"effective_at\": \"2026-06-02T00:00:02Z\",\n      \"received_at\": \"2026-06-02T00:00:03Z\",\n      \"sequence_no\": 6,\n      \"event_type\": \"wallet_opening_balance\",\n      \"amount_usd\": \"400.00\"\n    },\n    {\n      \"event_id\": \"evt_03_07_payment\",\n      \"idempotency_key\": \"key_evt_03_07_payment\",\n      \"effective_at\": \"2026-06-03T00:00:00Z\",\n      \"received_at\": \"2026-06-03T00:00:01Z\",\n      \"sequence_no\": 7,\n      \"event_type\": \"payment_settled\",\n      \"amount_usd\": \"2430.75\"\n    },\n    {\n      \"event_id\": \"evt_03_08_usage\",\n      \"idempotency_key\": \"key_evt_03_08_usage\",\n      \"effective_at\": \"2026-06-04T00:00:00Z\",\n      \"received_at\": \"2026-06-04T00:00:01Z\",\n      \"sequence_no\": 8,\n      \"event_type\": \"usage_recorded\",\n      \"units\": 500\n    },\n    {\n      \"event_id\": \"evt_03_09_audit\",\n      \"idempotency_key\": \"key_evt_03_09_audit\",\n      \"effective_at\": \"2026-06-09T00:00:00Z\",\n      \"received_at\": \"2026-06-09T00:00:01Z\",\n      \"sequence_no\": 9,\n      \"event_type\": \"invoice_audit_marker\",\n      \"marker\": \"line_9\"\n    },\n    {\n      \"event_id\": \"evt_03_10_audit\",\n      \"idempotency_key\": \"key_evt_03_10_audit\",\n      \"effective_at\": \"2026-06-10T00:00:00Z\",\n      \"received_at\": \"2026-06-10T00:00:01Z\",\n      \"sequence_no\": 10,\n      \"event_type\": \"invoice_audit_marker\",\n      \"marker\": \"line_10\"\n    },\n    {\n      \"event_id\": \"evt_03_11_audit\",\n      \"idempotency_key\": \"key_evt_03_11_audit\",\n      \"effective_at\": \"2026-06-11T00:00:00Z\",\n      \"received_at\": \"2026-06-11T00:00:01Z\",\n      \"sequence_no\": 11,\n      \"event_type\": \"invoice_audit_marker\",\n      \"marker\": \"line_11\"\n    },\n    {\n      \"event_id\": \"evt_03_12_audit\",\n      \"idempotency_key\": \"key_evt_03_12_audit\",\n      \"effective_at\": \"2026-06-12T00:00:00Z\",\n      \"received_at\": \"2026-06-12T00:00:01Z\",\n      \"sequence_no\": 12,\n      \"event_type\": \"invoice_audit_marker\",\n      \"marker\": \"line_12\"\n    },\n    {\n      \"event_id\": \"evt_03_13_audit\",\n      \"idempotency_key\": \"key_evt_03_13_audit\",\n      \"effective_at\": \"2026-06-13T00:00:00Z\",\n      \"received_at\": \"2026-06-13T00:00:01Z\",\n      \"sequence_no\": 13,\n      \"event_type\": \"invoice_audit_marker\",\n      \"marker\": \"line_13\"\n    },\n    {\n      \"event_id\": \"evt_03_14_audit\",\n      \"idempotency_key\": \"key_evt_03_14_audit\",\n      \"effective_at\": \"2026-06-14T00:00:00Z\",\n      \"received_at\": \"2026-06-14T00:00:01Z\",\n      \"sequence_no\": 14,\n      \"event_type\": \"invoice_audit_marker\",\n      \"marker\": \"line_14\"\n    },\n    {\n      \"event_id\": \"evt_03_15_audit\",\n      \"idempotency_key\": \"key_evt_03_15_audit\",\n      \"effective_at\": \"2026-06-15T00:00:00Z\",\n      \"received_at\": \"2026-06-15T00:00:01Z\",\n      \"sequence_no\": 15,\n      \"event_type\": \"invoice_audit_marker\",\n      \"marker\": \"line_15\"\n    },\n    {\n      \"event_id\": \"evt_03_16_audit\",\n      \"idempotency_key\": \"key_evt_03_16_audit\",\n      \"effective_at\": \"2026-06-15T00:00:00Z\",\n      \"received_at\": \"2026-06-15T00:00:01Z\",\n      \"sequence_no\": 16,\n      \"event_type\": \"invoice_audit_marker\",\n      \"marker\": \"line_16\"\n    }\n  ]\n}\n```\n## Required output JSON schema\nReturn exactly this JSON shape; preserve every key, use an array even when empty, and use two-decimal USD values:\n```json\n{\n  \"account_id\": \"string\",\n  \"audit_period_end\": \"YYYY-MM-DDTHH:MM:SSZ\",\n  \"ledger_balances_usd\": {\n    \"net_cash_collected\": 0.0,\n    \"customer_wallet_balance\": 0.0,\n    \"recognized_revenue\": 0.0,\n    \"deferred_revenue\": 0.0,\n    \"tax_liability\": 0.0,\n    \"fx_realized_gain_loss\": 0.0\n  },\n  \"reconciling_items\": [\n    {\n      \"event_id\": \"string\",\n      \"category\": \"DUPLICATE_IGNORED | RETROACTIVE_PRORATION | COUPON_FLOOR_CAPPED | COOLING_OFF_REFUND | FX_SETTLEMENT_DIFF | CHARGEBACK_FEE_UNRECOVERED | LATE_USAGE_REBILL | POLICY_VIOLATION_HOLD\",\n      \"amount_impact_usd\": 0.0\n    }\n  ],\n  \"ignored_event_ids\": [\n    \"evt_...\"\n  ],\n  \"final_subscription_status\": \"ACTIVE | CANCELED | PAST_DUE | SUSPENDED_DISPUTE\"\n}\n```",
+  "raw_model_response": "{\n  \"account_id\": \"acct_3003\",\n  \"audit_period_end\": \"2026-06-16T00:00:00Z\",\n  \"ledger_balances_usd\": {\n    \"net_cash_collected\": 2030.75,\n    \"customer_wallet_balance\": 0.0,\n    \"recognized_revenue\": 1300.0,\n    \"deferred_revenue\": 1300.0,\n    \"tax_liability\": 230.75,\n    \"fx_realized_gain_loss\": 0.0\n  },\n  \"reconciling_items\": [\n    {\n      \"event_id\": \"evt_03_04_coupon\",\n      \"category\": \"COUPON_FLOOR_CAPPED\",\n      \"amount_impact_usd\": 100.0\n    }\n  ],\n  \"ignored_event_ids\": [],\n  \"final_subscription_status\": \"ACTIVE\"\n}",
+  "token_usage": {
+    "input_tokens": 3124,
+    "output_tokens": 228,
+    "total_tokens": 3352
+  },
+  "estimated_usd_cost": 0.0,
+  "cost_estimate_basis": "provider-reported usage cost",
+  "latency_ms": 2008.212,
+  "grader": {
+    "passed": false,
+    "total_score": 0.666667,
+    "dimension_scores": {
+      "ledger_balances": 0.416667,
+      "reconciling_items": 0.0,
+      "ignored_event_ids": 0.15,
+      "final_status": 0.1
+    },
+    "failure_tags": [
+      "EXTRA_RECONCILIATION_ITEM",
+      "LEDGER_BALANCE_MISMATCH",
+      "MISSING_RECONCILIATION_ITEM"
+    ],
+    "format_compliant": true,
+    "errors": [],
+    "discrepancies": {
+      "balance_matches": {
+        "net_cash_collected": false,
+        "customer_wallet_balance": true,
+        "recognized_revenue": true,
+        "deferred_revenue": true,
+        "tax_liability": true,
+        "fx_realized_gain_loss": true
+      },
+      "balance_deltas_usd": {
+        "net_cash_collected": -400.0,
+        "customer_wallet_balance": 0.0,
+        "recognized_revenue": 0.0,
+        "deferred_revenue": 0.0,
+        "tax_liability": 0.0,
+        "fx_realized_gain_loss": 0.0
+      },
+      "extra_reconciling_items": [
+        {
+          "event_id": "evt_03_04_coupon",
+          "category": "COUPON_FLOOR_CAPPED",
+          "amount_impact_usd": 100.0
+        }
+      ],
+      "missing_reconciling_items": [
+        {
+          "event_id": "evt_03_04_coupon",
+          "category": "COUPON_FLOOR_CAPPED",
+          "amount_impact_usd": 150.0
+        }
+      ],
+      "ignored_event_ids_missing": [],
+      "ignored_event_ids_extra": [],
+      "status_matches": true
+    }
+  },
+  "automated_failure_tags": [
+    "EXTRA_RECONCILIATION_ITEM",
+    "LEDGER_BALANCE_MISMATCH",
+    "MISSING_RECONCILIATION_ITEM"
+  ]
+}

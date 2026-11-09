@@ -1,0 +1,277 @@
+{
+  "task_id": "task_05_tiered_usage_retro_credit",
+  "title": "Tiered usage and retroactive SLA credit",
+  "difficulty": "Hard",
+  "account_id": "acct_5005",
+  "audit_period_end": "2026-02-16T00:00:00Z",
+  "scenario": "Graduated marginal usage billing spans two periods. Fifteen usage batches total 15,000 units in P1 (including a late 3,000-unit batch) and 52,000 units in P2. A retroactive SLA credit removes 12,500 P1 units.",
+  "governing_accounting_asc_606_ledger_specification": [
+    "Event Ordering: process events in ascending effective_at (ISO-8601 UTC); break exact timestamp ties by sequence_no ascending. received_at is only for choosing the earliest duplicate and deciding whether a notice deadline was met relative to effective_at.",
+    "Idempotency Deduplication: among events sharing idempotency_key, apply only the event with earliest received_at (tie-break by sequence_no). Put every later retry's event_id in ignored_event_ids and add one DUPLICATE_IGNORED reconciling item whose amount_impact_usd is that duplicate's gross USD amount.",
+    "Intermediate Rounding: round every discrete monetary calculation, including proration daily rates, discount, tax, and FX conversion, to USD 0.01 using Banker's Rounding (ROUND_HALF_EVEN) before using it in a later calculation.",
+    "ASC 606 Revenue Recognition (Daily Proration): for a billing cycle with N days and D elapsed days at audit_period_end, recognized_revenue = ROUND_HALF_EVEN(net pretax consideration * D / N, 0.01), and deferred_revenue = net pretax consideration - recognized_revenue. Use exact UTC day counts unless a task explicitly defines local calendar-day billing boundaries, in which case use those stated boundaries.",
+    "Cutoff: only effective events at or before audit_period_end affect balances. Future-effective events remain visible in the input but have no effect on the as-of output.",
+    "Output only one JSON object matching the exact schema below. Use numeric USD amounts, two decimal places, all required keys, and no additional top-level keys."
+  ],
+  "policy_rules": [
+    "Use graduated marginal tiers separately for each billing period: units 1-10,000 at $0.05, units 10,001-50,000 at $0.035, and units above 50,000 at $0.02. Never apply one all-units rate to the entire period.",
+    "Include every usage batch according to effective period, including a batch received in P2 whose effective period is P1. The P1 invoice of $675 and P2 invoice of $1,940 have already been collected.",
+    "The 12,500-unit SLA credit unwinds P1's highest marginal units first. Credit $0.035 for the 5,000 P1 units in Tier 2, then $0.05 for the next 7,500 Tier 1 units. Credit is issued to customer_wallet_balance and reduces P1 revenue; log it as LATE_USAGE_REBILL with negative amount impact.",
+    "P1 is fully delivered at audit cutoff. P2 is a 30-day service cycle with 15 days elapsed. Both invoices have been collected by the cutoff. Recognize net P1 revenue in full and half of P2 revenue; defer the remainder. Status is ACTIVE."
+  ],
+  "events": [
+    {
+      "event_id": "evt_05_period1_open",
+      "idempotency_key": "key_evt_05_period1_open",
+      "effective_at": "2026-01-01T00:00:00Z",
+      "received_at": "2026-01-01T00:00:01Z",
+      "sequence_no": 1,
+      "event_type": "billing_period_opened",
+      "period": "P1",
+      "cycle_days": 31
+    },
+    {
+      "event_id": "evt_05_p1_usage_02",
+      "idempotency_key": "key_evt_05_p1_usage_02",
+      "effective_at": "2026-01-02T12:00:00Z",
+      "received_at": "2026-01-02T12:01:00Z",
+      "sequence_no": 2,
+      "event_type": "usage_batch",
+      "period": "P1",
+      "units": 1500
+    },
+    {
+      "event_id": "evt_05_p1_usage_03",
+      "idempotency_key": "key_evt_05_p1_usage_03",
+      "effective_at": "2026-01-03T12:00:00Z",
+      "received_at": "2026-01-03T12:01:00Z",
+      "sequence_no": 3,
+      "event_type": "usage_batch",
+      "period": "P1",
+      "units": 1500
+    },
+    {
+      "event_id": "evt_05_p1_usage_04",
+      "idempotency_key": "key_evt_05_p1_usage_04",
+      "effective_at": "2026-01-04T12:00:00Z",
+      "received_at": "2026-01-04T12:01:00Z",
+      "sequence_no": 4,
+      "event_type": "usage_batch",
+      "period": "P1",
+      "units": 1500
+    },
+    {
+      "event_id": "evt_05_p1_usage_05",
+      "idempotency_key": "key_evt_05_p1_usage_05",
+      "effective_at": "2026-01-05T12:00:00Z",
+      "received_at": "2026-01-05T12:01:00Z",
+      "sequence_no": 5,
+      "event_type": "usage_batch",
+      "period": "P1",
+      "units": 1500
+    },
+    {
+      "event_id": "evt_05_p1_usage_06",
+      "idempotency_key": "key_evt_05_p1_usage_06",
+      "effective_at": "2026-01-06T12:00:00Z",
+      "received_at": "2026-01-06T12:01:00Z",
+      "sequence_no": 6,
+      "event_type": "usage_batch",
+      "period": "P1",
+      "units": 1500
+    },
+    {
+      "event_id": "evt_05_p1_usage_07",
+      "idempotency_key": "key_evt_05_p1_usage_07",
+      "effective_at": "2026-01-07T12:00:00Z",
+      "received_at": "2026-01-07T12:01:00Z",
+      "sequence_no": 7,
+      "event_type": "usage_batch",
+      "period": "P1",
+      "units": 1500
+    },
+    {
+      "event_id": "evt_05_p1_usage_08",
+      "idempotency_key": "key_evt_05_p1_usage_08",
+      "effective_at": "2026-01-08T12:00:00Z",
+      "received_at": "2026-01-08T12:01:00Z",
+      "sequence_no": 8,
+      "event_type": "usage_batch",
+      "period": "P1",
+      "units": 3000
+    },
+    {
+      "event_id": "evt_05_p1_late_batch",
+      "idempotency_key": "key_evt_05_p1_late_batch",
+      "effective_at": "2026-01-20T12:00:00Z",
+      "received_at": "2026-02-05T09:00:00Z",
+      "sequence_no": 9,
+      "event_type": "usage_batch",
+      "period": "P1",
+      "units": 3000,
+      "late_arrival": true
+    },
+    {
+      "event_id": "evt_05_p1_invoice",
+      "idempotency_key": "key_evt_05_p1_invoice",
+      "effective_at": "2026-02-01T00:00:00Z",
+      "received_at": "2026-02-01T00:00:01Z",
+      "sequence_no": 10,
+      "event_type": "usage_invoice",
+      "period": "P1",
+      "amount_usd": "675.00"
+    },
+    {
+      "event_id": "evt_05_p1_payment",
+      "idempotency_key": "key_evt_05_p1_payment",
+      "effective_at": "2026-02-02T00:00:00Z",
+      "received_at": "2026-02-02T00:00:01Z",
+      "sequence_no": 11,
+      "event_type": "payment_settled",
+      "amount_usd": "675.00",
+      "period": "P1"
+    },
+    {
+      "event_id": "evt_05_sla_credit",
+      "idempotency_key": "key_evt_05_sla_credit",
+      "effective_at": "2026-02-06T00:00:00Z",
+      "received_at": "2026-02-06T00:00:01Z",
+      "sequence_no": 12,
+      "event_type": "sla_usage_credit",
+      "period": "P1",
+      "units": 12500
+    },
+    {
+      "event_id": "evt_05_period2_open",
+      "idempotency_key": "key_evt_05_period2_open",
+      "effective_at": "2026-02-01T00:00:00Z",
+      "received_at": "2026-02-01T00:00:02Z",
+      "sequence_no": 13,
+      "event_type": "billing_period_opened",
+      "period": "P2",
+      "cycle_days": 30
+    },
+    {
+      "event_id": "evt_05_p2_usage_01",
+      "idempotency_key": "key_evt_05_p2_usage_01",
+      "effective_at": "2026-02-02T13:00:00Z",
+      "received_at": "2026-02-02T13:01:00Z",
+      "sequence_no": 14,
+      "event_type": "usage_batch",
+      "period": "P2",
+      "units": 7000
+    },
+    {
+      "event_id": "evt_05_p2_usage_02",
+      "idempotency_key": "key_evt_05_p2_usage_02",
+      "effective_at": "2026-02-03T13:00:00Z",
+      "received_at": "2026-02-03T13:01:00Z",
+      "sequence_no": 15,
+      "event_type": "usage_batch",
+      "period": "P2",
+      "units": 7000
+    },
+    {
+      "event_id": "evt_05_p2_usage_03",
+      "idempotency_key": "key_evt_05_p2_usage_03",
+      "effective_at": "2026-02-04T13:00:00Z",
+      "received_at": "2026-02-04T13:01:00Z",
+      "sequence_no": 16,
+      "event_type": "usage_batch",
+      "period": "P2",
+      "units": 7000
+    },
+    {
+      "event_id": "evt_05_p2_usage_04",
+      "idempotency_key": "key_evt_05_p2_usage_04",
+      "effective_at": "2026-02-05T13:00:00Z",
+      "received_at": "2026-02-05T13:01:00Z",
+      "sequence_no": 17,
+      "event_type": "usage_batch",
+      "period": "P2",
+      "units": 7000
+    },
+    {
+      "event_id": "evt_05_p2_usage_05",
+      "idempotency_key": "key_evt_05_p2_usage_05",
+      "effective_at": "2026-02-06T13:00:00Z",
+      "received_at": "2026-02-06T13:01:00Z",
+      "sequence_no": 18,
+      "event_type": "usage_batch",
+      "period": "P2",
+      "units": 7000
+    },
+    {
+      "event_id": "evt_05_p2_usage_06",
+      "idempotency_key": "key_evt_05_p2_usage_06",
+      "effective_at": "2026-02-07T13:00:00Z",
+      "received_at": "2026-02-07T13:01:00Z",
+      "sequence_no": 19,
+      "event_type": "usage_batch",
+      "period": "P2",
+      "units": 7000
+    },
+    {
+      "event_id": "evt_05_p2_usage_07",
+      "idempotency_key": "key_evt_05_p2_usage_07",
+      "effective_at": "2026-02-08T13:00:00Z",
+      "received_at": "2026-02-08T13:01:00Z",
+      "sequence_no": 20,
+      "event_type": "usage_batch",
+      "period": "P2",
+      "units": 10000
+    },
+    {
+      "event_id": "evt_05_p2_invoice",
+      "idempotency_key": "key_evt_05_p2_invoice",
+      "effective_at": "2026-02-10T00:00:00Z",
+      "received_at": "2026-02-10T00:00:01Z",
+      "sequence_no": 21,
+      "event_type": "usage_invoice",
+      "period": "P2",
+      "amount_usd": "1940.00"
+    },
+    {
+      "event_id": "evt_05_p2_payment",
+      "idempotency_key": "key_evt_05_p2_payment",
+      "effective_at": "2026-02-11T00:00:00Z",
+      "received_at": "2026-02-11T00:00:01Z",
+      "sequence_no": 22,
+      "event_type": "payment_settled",
+      "amount_usd": "1940.00",
+      "period": "P2"
+    },
+    {
+      "event_id": "evt_05_cutoff",
+      "idempotency_key": "key_evt_05_cutoff",
+      "effective_at": "2026-02-16T00:00:00Z",
+      "received_at": "2026-02-16T00:00:01Z",
+      "sequence_no": 23,
+      "event_type": "audit_cutoff_marker"
+    }
+  ],
+  "metadata": {
+    "case": {
+      "engine": "task_05"
+    },
+    "dry_run_balance_mutations": {
+      "SIMULATED_LEDGER_OFFSET_A": {
+        "net_cash_collected": 2616.11,
+        "customer_wallet_balance": 550.0,
+        "recognized_revenue": 1093.89,
+        "deferred_revenue": 971.11,
+        "tax_liability": 0.0,
+        "fx_realized_gain_loss": 0.0
+      },
+      "SIMULATED_LEDGER_OFFSET_B": {
+        "net_cash_collected": 2590.0,
+        "customer_wallet_balance": 575.0,
+        "recognized_revenue": 1095.0,
+        "deferred_revenue": 970.0,
+        "tax_liability": 0.0,
+        "fx_realized_gain_loss": 0.0
+      }
+    }
+  },
+  "prompt": "# Tiered usage and retroactive SLA credit (Hard)\n## Scenario\nGraduated marginal usage billing spans two periods. Fifteen usage batches total 15,000 units in P1 (including a late 3,000-unit batch) and 52,000 units in P2. A retroactive SLA credit removes 12,500 P1 units.\n## Governing Accounting & ASC 606 Ledger Specification\n1. Event Ordering: process events in ascending effective_at (ISO-8601 UTC); break exact timestamp ties by sequence_no ascending. received_at is only for choosing the earliest duplicate and deciding whether a notice deadline was met relative to effective_at.\n2. Idempotency Deduplication: among events sharing idempotency_key, apply only the event with earliest received_at (tie-break by sequence_no). Put every later retry's event_id in ignored_event_ids and add one DUPLICATE_IGNORED reconciling item whose amount_impact_usd is that duplicate's gross USD amount.\n3. Intermediate Rounding: round every discrete monetary calculation, including proration daily rates, discount, tax, and FX conversion, to USD 0.01 using Banker's Rounding (ROUND_HALF_EVEN) before using it in a later calculation.\n4. ASC 606 Revenue Recognition (Daily Proration): for a billing cycle with N days and D elapsed days at audit_period_end, recognized_revenue = ROUND_HALF_EVEN(net pretax consideration * D / N, 0.01), and deferred_revenue = net pretax consideration - recognized_revenue. Use exact UTC day counts unless a task explicitly defines local calendar-day billing boundaries, in which case use those stated boundaries.\n5. Cutoff: only effective events at or before audit_period_end affect balances. Future-effective events remain visible in the input but have no effect on the as-of output.\n6. Output only one JSON object matching the exact schema below. Use numeric USD amounts, two decimal places, all required keys, and no additional top-level keys.\n## Task-Specific Policies\n1. Use graduated marginal tiers separately for each billing period: units 1-10,000 at $0.05, units 10,001-50,000 at $0.035, and units above 50,000 at $0.02. Never apply one all-units rate to the entire period.\n2. Include every usage batch according to effective period, including a batch received in P2 whose effective period is P1. The P1 invoice of $675 and P2 invoice of $1,940 have already been collected.\n3. The 12,500-unit SLA credit unwinds P1's highest marginal units first. Credit $0.035 for the 5,000 P1 units in Tier 2, then $0.05 for the next 7,500 Tier 1 units. Credit is issued to customer_wallet_balance and reduces P1 revenue; log it as LATE_USAGE_REBILL with negative amount impact.\n4. P1 is fully delivered at audit cutoff. P2 is a 30-day service cycle with 15 days elapsed. Both invoices have been collected by the cutoff. Recognize net P1 revenue in full and half of P2 revenue; defer the remainder. Status is ACTIVE.\n## Input data (complete event stream)\n```json\n{\n  \"account_id\": \"acct_5005\",\n  \"audit_period_end\": \"2026-02-16T00:00:00Z\",\n  \"events\": [\n    {\n      \"event_id\": \"evt_05_period1_open\",\n      \"idempotency_key\": \"key_evt_05_period1_open\",\n      \"effective_at\": \"2026-01-01T00:00:00Z\",\n      \"received_at\": \"2026-01-01T00:00:01Z\",\n      \"sequence_no\": 1,\n      \"event_type\": \"billing_period_opened\",\n      \"period\": \"P1\",\n      \"cycle_days\": 31\n    },\n    {\n      \"event_id\": \"evt_05_p1_usage_02\",\n      \"idempotency_key\": \"key_evt_05_p1_usage_02\",\n      \"effective_at\": \"2026-01-02T12:00:00Z\",\n      \"received_at\": \"2026-01-02T12:01:00Z\",\n      \"sequence_no\": 2,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P1\",\n      \"units\": 1500\n    },\n    {\n      \"event_id\": \"evt_05_p1_usage_03\",\n      \"idempotency_key\": \"key_evt_05_p1_usage_03\",\n      \"effective_at\": \"2026-01-03T12:00:00Z\",\n      \"received_at\": \"2026-01-03T12:01:00Z\",\n      \"sequence_no\": 3,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P1\",\n      \"units\": 1500\n    },\n    {\n      \"event_id\": \"evt_05_p1_usage_04\",\n      \"idempotency_key\": \"key_evt_05_p1_usage_04\",\n      \"effective_at\": \"2026-01-04T12:00:00Z\",\n      \"received_at\": \"2026-01-04T12:01:00Z\",\n      \"sequence_no\": 4,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P1\",\n      \"units\": 1500\n    },\n    {\n      \"event_id\": \"evt_05_p1_usage_05\",\n      \"idempotency_key\": \"key_evt_05_p1_usage_05\",\n      \"effective_at\": \"2026-01-05T12:00:00Z\",\n      \"received_at\": \"2026-01-05T12:01:00Z\",\n      \"sequence_no\": 5,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P1\",\n      \"units\": 1500\n    },\n    {\n      \"event_id\": \"evt_05_p1_usage_06\",\n      \"idempotency_key\": \"key_evt_05_p1_usage_06\",\n      \"effective_at\": \"2026-01-06T12:00:00Z\",\n      \"received_at\": \"2026-01-06T12:01:00Z\",\n      \"sequence_no\": 6,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P1\",\n      \"units\": 1500\n    },\n    {\n      \"event_id\": \"evt_05_p1_usage_07\",\n      \"idempotency_key\": \"key_evt_05_p1_usage_07\",\n      \"effective_at\": \"2026-01-07T12:00:00Z\",\n      \"received_at\": \"2026-01-07T12:01:00Z\",\n      \"sequence_no\": 7,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P1\",\n      \"units\": 1500\n    },\n    {\n      \"event_id\": \"evt_05_p1_usage_08\",\n      \"idempotency_key\": \"key_evt_05_p1_usage_08\",\n      \"effective_at\": \"2026-01-08T12:00:00Z\",\n      \"received_at\": \"2026-01-08T12:01:00Z\",\n      \"sequence_no\": 8,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P1\",\n      \"units\": 3000\n    },\n    {\n      \"event_id\": \"evt_05_p1_late_batch\",\n      \"idempotency_key\": \"key_evt_05_p1_late_batch\",\n      \"effective_at\": \"2026-01-20T12:00:00Z\",\n      \"received_at\": \"2026-02-05T09:00:00Z\",\n      \"sequence_no\": 9,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P1\",\n      \"units\": 3000,\n      \"late_arrival\": true\n    },\n    {\n      \"event_id\": \"evt_05_p1_invoice\",\n      \"idempotency_key\": \"key_evt_05_p1_invoice\",\n      \"effective_at\": \"2026-02-01T00:00:00Z\",\n      \"received_at\": \"2026-02-01T00:00:01Z\",\n      \"sequence_no\": 10,\n      \"event_type\": \"usage_invoice\",\n      \"period\": \"P1\",\n      \"amount_usd\": \"675.00\"\n    },\n    {\n      \"event_id\": \"evt_05_p1_payment\",\n      \"idempotency_key\": \"key_evt_05_p1_payment\",\n      \"effective_at\": \"2026-02-02T00:00:00Z\",\n      \"received_at\": \"2026-02-02T00:00:01Z\",\n      \"sequence_no\": 11,\n      \"event_type\": \"payment_settled\",\n      \"amount_usd\": \"675.00\",\n      \"period\": \"P1\"\n    },\n    {\n      \"event_id\": \"evt_05_sla_credit\",\n      \"idempotency_key\": \"key_evt_05_sla_credit\",\n      \"effective_at\": \"2026-02-06T00:00:00Z\",\n      \"received_at\": \"2026-02-06T00:00:01Z\",\n      \"sequence_no\": 12,\n      \"event_type\": \"sla_usage_credit\",\n      \"period\": \"P1\",\n      \"units\": 12500\n    },\n    {\n      \"event_id\": \"evt_05_period2_open\",\n      \"idempotency_key\": \"key_evt_05_period2_open\",\n      \"effective_at\": \"2026-02-01T00:00:00Z\",\n      \"received_at\": \"2026-02-01T00:00:02Z\",\n      \"sequence_no\": 13,\n      \"event_type\": \"billing_period_opened\",\n      \"period\": \"P2\",\n      \"cycle_days\": 30\n    },\n    {\n      \"event_id\": \"evt_05_p2_usage_01\",\n      \"idempotency_key\": \"key_evt_05_p2_usage_01\",\n      \"effective_at\": \"2026-02-02T13:00:00Z\",\n      \"received_at\": \"2026-02-02T13:01:00Z\",\n      \"sequence_no\": 14,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P2\",\n      \"units\": 7000\n    },\n    {\n      \"event_id\": \"evt_05_p2_usage_02\",\n      \"idempotency_key\": \"key_evt_05_p2_usage_02\",\n      \"effective_at\": \"2026-02-03T13:00:00Z\",\n      \"received_at\": \"2026-02-03T13:01:00Z\",\n      \"sequence_no\": 15,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P2\",\n      \"units\": 7000\n    },\n    {\n      \"event_id\": \"evt_05_p2_usage_03\",\n      \"idempotency_key\": \"key_evt_05_p2_usage_03\",\n      \"effective_at\": \"2026-02-04T13:00:00Z\",\n      \"received_at\": \"2026-02-04T13:01:00Z\",\n      \"sequence_no\": 16,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P2\",\n      \"units\": 7000\n    },\n    {\n      \"event_id\": \"evt_05_p2_usage_04\",\n      \"idempotency_key\": \"key_evt_05_p2_usage_04\",\n      \"effective_at\": \"2026-02-05T13:00:00Z\",\n      \"received_at\": \"2026-02-05T13:01:00Z\",\n      \"sequence_no\": 17,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P2\",\n      \"units\": 7000\n    },\n    {\n      \"event_id\": \"evt_05_p2_usage_05\",\n      \"idempotency_key\": \"key_evt_05_p2_usage_05\",\n      \"effective_at\": \"2026-02-06T13:00:00Z\",\n      \"received_at\": \"2026-02-06T13:01:00Z\",\n      \"sequence_no\": 18,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P2\",\n      \"units\": 7000\n    },\n    {\n      \"event_id\": \"evt_05_p2_usage_06\",\n      \"idempotency_key\": \"key_evt_05_p2_usage_06\",\n      \"effective_at\": \"2026-02-07T13:00:00Z\",\n      \"received_at\": \"2026-02-07T13:01:00Z\",\n      \"sequence_no\": 19,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P2\",\n      \"units\": 7000\n    },\n    {\n      \"event_id\": \"evt_05_p2_usage_07\",\n      \"idempotency_key\": \"key_evt_05_p2_usage_07\",\n      \"effective_at\": \"2026-02-08T13:00:00Z\",\n      \"received_at\": \"2026-02-08T13:01:00Z\",\n      \"sequence_no\": 20,\n      \"event_type\": \"usage_batch\",\n      \"period\": \"P2\",\n      \"units\": 10000\n    },\n    {\n      \"event_id\": \"evt_05_p2_invoice\",\n      \"idempotency_key\": \"key_evt_05_p2_invoice\",\n      \"effective_at\": \"2026-02-10T00:00:00Z\",\n      \"received_at\": \"2026-02-10T00:00:01Z\",\n      \"sequence_no\": 21,\n      \"event_type\": \"usage_invoice\",\n      \"period\": \"P2\",\n      \"amount_usd\": \"1940.00\"\n    },\n    {\n      \"event_id\": \"evt_05_p2_payment\",\n      \"idempotency_key\": \"key_evt_05_p2_payment\",\n      \"effective_at\": \"2026-02-11T00:00:00Z\",\n      \"received_at\": \"2026-02-11T00:00:01Z\",\n      \"sequence_no\": 22,\n      \"event_type\": \"payment_settled\",\n      \"amount_usd\": \"1940.00\",\n      \"period\": \"P2\"\n    },\n    {\n      \"event_id\": \"evt_05_cutoff\",\n      \"idempotency_key\": \"key_evt_05_cutoff\",\n      \"effective_at\": \"2026-02-16T00:00:00Z\",\n      \"received_at\": \"2026-02-16T00:00:01Z\",\n      \"sequence_no\": 23,\n      \"event_type\": \"audit_cutoff_marker\"\n    }\n  ]\n}\n```\n## Required output JSON schema\nReturn exactly this JSON shape; preserve every key, use an array even when empty, and use two-decimal USD values:\n```json\n{\n  \"account_id\": \"string\",\n  \"audit_period_end\": \"YYYY-MM-DDTHH:MM:SSZ\",\n  \"ledger_balances_usd\": {\n    \"net_cash_collected\": 0.0,\n    \"customer_wallet_balance\": 0.0,\n    \"recognized_revenue\": 0.0,\n    \"deferred_revenue\": 0.0,\n    \"tax_liability\": 0.0,\n    \"fx_realized_gain_loss\": 0.0\n  },\n  \"reconciling_items\": [\n    {\n      \"event_id\": \"string\",\n      \"category\": \"DUPLICATE_IGNORED | RETROACTIVE_PRORATION | COUPON_FLOOR_CAPPED | COOLING_OFF_REFUND | FX_SETTLEMENT_DIFF | CHARGEBACK_FEE_UNRECOVERED | LATE_USAGE_REBILL | POLICY_VIOLATION_HOLD\",\n      \"amount_impact_usd\": 0.0\n    }\n  ],\n  \"ignored_event_ids\": [\n    \"evt_...\"\n  ],\n  \"final_subscription_status\": \"ACTIVE | CANCELED | PAST_DUE | SUSPENDED_DISPUTE\"\n}\n```"
+}

@@ -1,0 +1,418 @@
+{
+  "generated_at": "2026-11-08T20:20:38Z",
+  "dry_run_oracle": false,
+  "task_ids": [
+    "task_01_idempotency_ooo",
+    "task_02_retro_proration_cooling",
+    "task_03_coupon_floor_tax_cap",
+    "task_04_fx_chargeback_reversal",
+    "task_05_tiered_usage_retro_credit",
+    "task_06_leap_year_dst_cutover",
+    "task_07_negative_control_clean_audit",
+    "task_08_asc606_multi_rule_cascade"
+  ],
+  "trials_per_task": 1,
+  "models": [
+    {
+      "model_id": "nvidia/nemotron-3.5-lightning:free",
+      "trials_per_task": 1,
+      "trial_count": 8,
+      "expected_trial_count": 8,
+      "coverage_rate": 1.0,
+      "strict_pass_rate": 0.0,
+      "mean_partial_score": 0.465148875,
+      "pass_at_k": 0.0,
+      "pass_all_k": 0.0,
+      "mean_latency_seconds": 3.946845,
+      "total_run_cost_usd": 0.0
+    },
+    {
+      "model_id": "nvidia/nemotron-3.5-super-vl:free",
+      "trials_per_task": 1,
+      "trial_count": 8,
+      "expected_trial_count": 8,
+      "coverage_rate": 1.0,
+      "strict_pass_rate": 0.0,
+      "mean_partial_score": 0.6498957499999999,
+      "pass_at_k": 0.0,
+      "pass_all_k": 0.0,
+      "mean_latency_seconds": 2.328007,
+      "total_run_cost_usd": 0.0
+    },
+    {
+      "model_id": "dots-studio/dots-3-note-preview:free",
+      "trials_per_task": 1,
+      "trial_count": 8,
+      "expected_trial_count": 8,
+      "coverage_rate": 1.0,
+      "strict_pass_rate": 0.0,
+      "mean_partial_score": 0.8510416249999999,
+      "pass_at_k": 0.0,
+      "pass_all_k": 0.0,
+      "mean_latency_seconds": 11.26293275,
+      "total_run_cost_usd": 0.0
+    },
+    {
+      "model_id": "xingchen-agi/xing4.0-29b-a4b:free",
+      "trials_per_task": 1,
+      "trial_count": 8,
+      "expected_trial_count": 8,
+      "coverage_rate": 1.0,
+      "strict_pass_rate": 0.0,
+      "mean_partial_score": 0.5563690000000001,
+      "pass_at_k": 0.0,
+      "pass_all_k": 0.0,
+      "mean_latency_seconds": 9.580015750000001,
+      "total_run_cost_usd": 0.0
+    },
+    {
+      "model_id": "cohere/north-mini-code:free",
+      "trials_per_task": 1,
+      "trial_count": 8,
+      "expected_trial_count": 8,
+      "coverage_rate": 1.0,
+      "strict_pass_rate": 0.0,
+      "mean_partial_score": 0.44625,
+      "pass_at_k": 0.0,
+      "pass_all_k": 0.0,
+      "mean_latency_seconds": 1.83686875,
+      "total_run_cost_usd": 0.0
+    }
+  ],
+  "task_matrix": [
+    {
+      "task_id": "task_01_idempotency_ooo",
+      "nvidia/nemotron-3.5-lightning:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "IGNORED_EVENT_ID_MISMATCH",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "nvidia/nemotron-3.5-super-vl:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "IGNORED_EVENT_ID_MISMATCH",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dots-studio/dots-3-note-preview:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "xingchen-agi/xing4.0-29b-a4b:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "IGNORED_EVENT_ID_MISMATCH"
+        ]
+      },
+      "cohere/north-mini-code:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "IGNORED_EVENT_ID_MISMATCH"
+        ]
+      }
+    },
+    {
+      "task_id": "task_02_retro_proration_cooling",
+      "nvidia/nemotron-3.5-lightning:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "IGNORED_EVENT_ID_MISMATCH"
+        ]
+      },
+      "nvidia/nemotron-3.5-super-vl:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dots-studio/dots-3-note-preview:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "xingchen-agi/xing4.0-29b-a4b:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "cohere/north-mini-code:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH",
+          "MISSING_RECONCILIATION_ITEM"
+        ]
+      }
+    },
+    {
+      "task_id": "task_03_coupon_floor_tax_cap",
+      "nvidia/nemotron-3.5-lightning:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "IGNORED_EVENT_ID_MISMATCH"
+        ]
+      },
+      "nvidia/nemotron-3.5-super-vl:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dots-studio/dots-3-note-preview:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "OUTPUT_FORMAT_VIOLATION"
+        ]
+      },
+      "xingchen-agi/xing4.0-29b-a4b:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "cohere/north-mini-code:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      }
+    },
+    {
+      "task_id": "task_04_fx_chargeback_reversal",
+      "nvidia/nemotron-3.5-lightning:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "nvidia/nemotron-3.5-super-vl:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dots-studio/dots-3-note-preview:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH",
+          "MISSING_RECONCILIATION_ITEM"
+        ]
+      },
+      "xingchen-agi/xing4.0-29b-a4b:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "cohere/north-mini-code:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "JSON_FORMAT_ERROR"
+        ]
+      }
+    },
+    {
+      "task_id": "task_05_tiered_usage_retro_credit",
+      "nvidia/nemotron-3.5-lightning:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "IGNORED_EVENT_ID_MISMATCH"
+        ]
+      },
+      "nvidia/nemotron-3.5-super-vl:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dots-studio/dots-3-note-preview:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "OUTPUT_FORMAT_VIOLATION"
+        ]
+      },
+      "xingchen-agi/xing4.0-29b-a4b:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "IGNORED_EVENT_ID_MISMATCH"
+        ]
+      },
+      "cohere/north-mini-code:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      }
+    },
+    {
+      "task_id": "task_06_leap_year_dst_cutover",
+      "nvidia/nemotron-3.5-lightning:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "IGNORED_EVENT_ID_MISMATCH"
+        ]
+      },
+      "nvidia/nemotron-3.5-super-vl:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dots-studio/dots-3-note-preview:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "OUTPUT_FORMAT_VIOLATION"
+        ]
+      },
+      "xingchen-agi/xing4.0-29b-a4b:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "cohere/north-mini-code:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      }
+    },
+    {
+      "task_id": "task_07_negative_control_clean_audit",
+      "nvidia/nemotron-3.5-lightning:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "nvidia/nemotron-3.5-super-vl:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dots-studio/dots-3-note-preview:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH",
+          "OUTPUT_FORMAT_VIOLATION"
+        ]
+      },
+      "xingchen-agi/xing4.0-29b-a4b:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "cohere/north-mini-code:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      }
+    },
+    {
+      "task_id": "task_08_asc606_multi_rule_cascade",
+      "nvidia/nemotron-3.5-lightning:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "nvidia/nemotron-3.5-super-vl:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      },
+      "dots-studio/dots-3-note-preview:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "EXTRA_RECONCILIATION_ITEM",
+          "MISSING_RECONCILIATION_ITEM"
+        ]
+      },
+      "xingchen-agi/xing4.0-29b-a4b:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "LEDGER_BALANCE_MISMATCH",
+          "MISSING_RECONCILIATION_ITEM"
+        ]
+      },
+      "cohere/north-mini-code:free": {
+        "passed_trials": 0,
+        "trials": 1,
+        "primary_failure_tags": [
+          "IGNORED_EVENT_ID_MISMATCH",
+          "LEDGER_BALANCE_MISMATCH"
+        ]
+      }
+    }
+  ]
+}

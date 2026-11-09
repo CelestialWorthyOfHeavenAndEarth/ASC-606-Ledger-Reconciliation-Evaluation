@@ -1,0 +1,38 @@
+{
+  "account_id": "acct_8008",
+  "audit_period_end": "2026-09-19T00:00:00Z",
+  "ledger_balances_usd": {
+    "net_cash_collected": 2000.0,
+    "customer_wallet_balance": 300.0,
+    "recognized_revenue": 1020.0,
+    "deferred_revenue": 1280.0,
+    "tax_liability": 0.0,
+    "fx_realized_gain_loss": 0.0
+  },
+  "reconciling_items": [
+    {
+      "event_id": "evt_08_03_migration",
+      "category": "RETROACTIVE_PRORATION",
+      "amount_impact_usd": 960.0
+    },
+    {
+      "event_id": "evt_08_05_coupon",
+      "category": "COUPON_FLOOR_CAPPED",
+      "amount_impact_usd": 392.0
+    },
+    {
+      "event_id": "evt_08_08_payment_retry",
+      "category": "DUPLICATE_IGNORED",
+      "amount_impact_usd": 2600.0
+    },
+    {
+      "event_id": "evt_08_10_dispute",
+      "category": "POLICY_VIOLATION_HOLD",
+      "amount_impact_usd": 600.0
+    }
+  ],
+  "ignored_event_ids": [
+    "evt_08_08_payment_retry"
+  ],
+  "final_subscription_status": "SUSPENDED_DISPUTE"
+}

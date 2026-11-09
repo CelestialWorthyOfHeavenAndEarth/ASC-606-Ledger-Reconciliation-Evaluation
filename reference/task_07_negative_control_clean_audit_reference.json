@@ -1,0 +1,15 @@
+{
+  "account_id": "acct_7007",
+  "audit_period_end": "2026-04-15T00:00:01Z",
+  "ledger_balances_usd": {
+    "net_cash_collected": 3000.0,
+    "customer_wallet_balance": 1786.67,
+    "recognized_revenue": 1213.33,
+    "deferred_revenue": 0.0,
+    "tax_liability": 0.0,
+    "fx_realized_gain_loss": 0.0
+  },
+  "reconciling_items": [],
+  "ignored_event_ids": [],
+  "final_subscription_status": "CANCELED"
+}

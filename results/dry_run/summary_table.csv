@@ -1,0 +1,4 @@
+model_id,trials_per_task,responses_scored,expected_responses,coverage_pct,strict_pass_rate_pct,mean_partial_score_pct,pass_at_k_pct,pass_all_k_pct,mean_latency_seconds,total_run_cost_usd
+dry-run/oracle-reference,3,24,24,100.0,100.0,100.0,100.0,100.0,0.0,0.0
+dry-run/simulated-balance-offset-a,3,24,24,100.0,0.0,75.0,0.0,0.0,0.0,0.0
+dry-run/simulated-balance-offset-b,3,24,24,100.0,0.0,83.33,0.0,0.0,0.0,0.0
